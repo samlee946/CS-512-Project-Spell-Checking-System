@@ -13,6 +13,7 @@
 \usepackage[cmex10]{amsmath}
 \usepackage[tight,footnotesize]{subfigure}
 \usepackage{xcolor}
+\usepackage{float}
 \usepackage[lined,ruled]{algorithm2e}
 
 \usepackage[latin1]{inputenc}
@@ -59,6 +60,17 @@
 \newcommand{\riham}[1]{{\color{red}{#1}}}
 \newcommand{\james}[1]{{\color{blue}{#1}}}
 
+\makeatletter
+\newcommand{\removelatexerror}{\let\@latex@error\@gobble}
+\makeatother
+\newcommand{\myalgorithm}{%
+	\begingroup
+	\removelatexerror% Nullify \@latex@error
+	\begin{algorithm*}[H]
+		%...
+	\end{algorithm*}
+	\endgroup}
+
 
 \begin{document}
 
@@ -93,6 +105,7 @@ This article mainly introduces the achievement of a word spell checking system. 
 \section{Project Description}\label{sec:1. Project Description}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \textnormal{
+	The type of this project is implementation of an algorithm not covered in class.
  There are a lot of ways to detect spelling mistakes and correct the word. This system uses dictionary searching to detect possible correct spelling. Spelling checking plays an important part in our daily life, especially for international students whose mother language is not English, therefore developing a spell-checking system helps a lot and is extremely useful. 
 We use a Trie to store the whole dictionary. More specifically, we use a ternary search tree, which is one kind of implementation of Trie. The correction of a word is a process of finding the most similar word. We achieve it using a combination of several methods like edit distance, similarity keys, and n-grams. Each one in our group is proficient in data structures and algorithms, so it is feasible for us to complete it within a semester. 
 By avoiding some number of calculations and combining several different ways to calculate the difference between two words, we can somehow improve the efficiency and accuracy of this system. This is the novel part of this system.
@@ -110,18 +123,18 @@ The project has four stages: Gathering, Design, Infrastructure Implementation, a
 \subsection{Stage2 - The Design Stage. }\label{sec: 2:The Design Stage.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \input{Stage2.tex}
-
-\subsection{Stage3 - The Implementation Stage. }\label{sec: 3 The Implementation Stage.}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\input{Stage3.tex}
-
-\subsection{Stage4 -	User Interface. }\label{sec: 4. User Interface.}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\input{Stage4.tex}
-
-\section{Project Highlights.}\label{sec:7. Project Highlights.}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\input{Highlights.tex}
+%
+%\subsection{Stage3 - The Implementation Stage. }\label{sec: 3 The Implementation Stage.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\input{Stage3.tex}
+%
+%\subsection{Stage4 -	User Interface. }\label{sec: 4. User Interface.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\input{Stage4.tex}
+%
+%\section{Project Highlights.}\label{sec:7. Project Highlights.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\input{Highlights.tex}
 
 
 \bibliographystyle{IEEEtran}
