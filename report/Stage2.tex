@@ -1,18 +1,20 @@
-
+%
 %\begin{itemize} 
 %\item{ }
 %A brief textual description of the overall flow diagram (along with its functional operation in the different user scenarios described in the first stage of the project).
 %\item{ }
 %A specification of each algorithm and associated data structures together with its entities, attributes, and operations ( include an English description of how they relate to your user scenario(s)).
-
+%
 %\end{itemize}
 \begin{itemize} 
 \item{  Short Textual Project Description. } \\
 First, users input text(String), then we get the input and divide the input into words. \\
 For each word, we firstly check if this word exists in our dictionary. If this word is in our dictionary, then this word is correctly spelled. If we cannot find this word in our dictionary, then this word is wrong. \\
 For each wrong word, we first modify this word 3 times at most, if the modified word can be found in our dictionary, we give users a suggestion of modification. If we do not find any modified words within edit distance of 3 in our dictionary, we will tell users that we could not give any suggestion with respect to this word, and they should think about this word again carefully. \\
-Overall average time complexity: $ O(\log n) $ for each lookup, insertion and deletion, where $ n $ stands for the number of nodes in the ternary search tree. \\
-Overall space complexity: $ O(n) $, where $ n $ stands for the number of nodes in the ternary search tree, which is the number of prefixes. E.g. there are 6 prefixes for word `trie' and `tree'(`t', `tr', `tre', `tree', `tri', `trie').
+Overall average time complexity: $ O(\log n) $ for each operation, including lookup, insertion and deletion, where $ n $ stands for the number of nodes in the ternary search tree. \\
+Overall space complexity: $ O(n) $, where $ n $ stands for the number of nodes in the ternary search tree, which is also the number of prefixes. 
+E.g. there are 6 prefixes for word `trie' and `tree'(`t', `tr', `tre', `tree', `tri', `trie'). \\
+
 
 \item{ Flow Diagram. }
 \begin{figure}[H]
@@ -86,7 +88,7 @@ result = an empty list of strings\;
 	}
 	\ForEach{letter in alphabet}{replaces.append(a + letter + b(2, len(b)))\;}
 }
-put the candidates in deletes, transposes replaces and inserts into result\;
+put all candidates in deletes, transposes replaces and inserts into result\;
 return result\;
 \end{algorithm}
 \endgroup
