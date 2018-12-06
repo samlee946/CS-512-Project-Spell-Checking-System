@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import trie
 import string
+import nltk
+from nltk.tokenize import TweetTokenizer
 
 def check_word(trie, word):
     suggest_list = []
@@ -14,6 +16,8 @@ def check_word(trie, word):
                     break
                 if check_dictionary(trie, edited_word) == True:
                     suggest_list.append(edited_word)
+        if len(suggest_list) == 0:
+            suggest_list.append('No suggestion')
     return suggest_list
 
 def edit_word_once(word):
@@ -71,4 +75,11 @@ if __name__ == '__main__':
     #print(trie.find('ternary'))
     #print(trie.find('aa'))
     #edit_word_once('test')
-    print(check_word(trie, 'tesa'))
+    #print(check_word(trie, 'tesa'))
+    text = input('input text:')
+    #tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+    tokenizer = TweetTokenizer()
+    s = tokenizer.tokenize(text)
+    #print(s)
+    for word in s:
+        print(word + repr(check_word(trie, word)))
