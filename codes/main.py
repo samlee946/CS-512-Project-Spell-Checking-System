@@ -1,18 +1,163 @@
 # -*- coding: utf-8 -*-
+import sys
+import os
+import time
 import trie
 import string
 import nltk
 from nltk.tokenize import TweetTokenizer
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenu, QVBoxLayout,
+    QSizePolicy, QMessageBox, QPushButton, QWidget, QSlider, QLabel,
+    QGridLayout, QGroupBox, QLineEdit, QCheckBox, QRadioButton, QListWidget,
+                             QListWidgetItem, QComboBox, QLineEdit,
+                             QPlainTextEdit, QProgressBar, QSplashScreen)
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtCore import pyqtSlot, Qt, QRectF, QThread, pyqtSignal
+
+class Window(QWidget):
+
+    def __init__(self, parent = None):
+        super(Window, self).__init__(parent = parent)
+        self.left = 10
+        self.top = 10
+        self.title = 'Spell Checking System'
+        self.width = 720
+        self.height = 480
+        self.initUI()
+        self.cnt = 0
+
+    def initUI(self):
+        print('Init UI')
+        grid = QGridLayout()
+
+        self.textbox = QPlainTextEdit(self)
+        self.textbox.resize(640, 480)
+        grid.addWidget(self.textbox, 0, 0, 5, 3)
+
+        self.button_check = QPushButton('Check!', self)
+        self.button_check.clicked.connect(self.button_check_event)
+        self.button_check.setEnabled(True)
+        self.button_check.setFixedSize(100, 40)
+        grid.addWidget(self.button_check, 0, 4)
+
+        self.button_clear = QPushButton('Clear Input', self)
+        self.button_clear.clicked.connect(self.button_clear_event)
+        self.button_clear.setEnabled(True)
+        self.button_clear.setFixedSize(100, 40)
+        grid.addWidget(self.button_clear, 0, 5)
+
+        self.words_label = QLabel('Words that have suggestion(s):')
+        grid.addWidget(self.words_label, 1, 4, 1, 2)
+
+        self.words_list = QListWidget()
+        self.words_list.setFixedSize(210, 240)
+        self.words_list.itemActivated.connect(self.word_list_item_event)
+        grid.addWidget(self.words_list, 2, 4, 1, 2)
+
+        self.suggestions_label = QLabel('Suggestion(s):')
+        grid.addWidget(self.suggestions_label, 3, 4, 1, 2)
+
+        self.suggestions_list = QListWidget()
+        self.suggestions_list.setFixedSize(210, 180)
+        self.suggestions_list.itemActivated.connect(self.correction_event)
+        grid.addWidget(self.suggestions_list, 4, 4, 1, 2)
+
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.setLayout(grid)
+        self.show()
+
+    def add_item_to_words_list(self, item):
+        self.words_list.addItem(item)
+        QApplication.processEvents()
+
+    def button_check_event(self):
+        self.words_list.clear()
+        self.suggestions_list.clear()
+        print('Got inputed text:')
+        text = self.textbox.toPlainText()
+        text = text.replace('\n', ' ').strip()
+        tokenizer = TweetTokenizer()
+        self.text = tokenizer.tokenize(text)
+        print(self.text)
+        if len(self.text) != 0:
+            self.suggest_list_of_all_words = check_text(self.text)
+            for i in range(len(self.text)):
+                if len(self.suggest_list_of_all_words[i]) == 0:
+                    continue
+                print('Adding a word:' + self.text[i])
+                item = QListWidgetItem(self.text[i], parent = None, type = i)
+                self.words_list.addItem(item)
+                #self.words_list.addItem(self.text[i])
+
+    def word_list_item_event(self, item):
+        self.suggestions_list.clear()
+        print('Selected ' + item.text() + ', id:' + repr(item.type()))
+        for suggestion in self.suggest_list_of_all_words[item.type()]:
+            item = QListWidgetItem(suggestion, parent = None, type =
+                                   item.type())
+            self.suggestions_list.addItem(item)
+
+    def correction_event(self, item):
+        print('Correcting ' + repr(item.type()) + ' ' + item.text())
+        self.text[item.type()] = item.text()
+        self.textbox.setPlainText(' '.join(self.text))
+
+    def button_clear_event(self):
+        self.textbox.setPlainText('')
+        self.words_list.clear()
+        self.suggestions_list.clear()
+
+class MyCustomWidget(QWidget):
+
+    def __init__(self, parent=None):
+        super(MyCustomWidget, self).__init__(parent)
+        layout = QVBoxLayout(self)
+
+        # Create a progress bar and a button and add them to the main layout
+        self.progressBar = QProgressBar(self)
+        self.progressBar.setRange(0,1)
+        layout.addWidget(self.progressBar)
+        button = QPushButton("Start", self)
+        layout.addWidget(button)
+
+        button.clicked.connect(self.onStart)
+
+        self.myLongTask = TaskThread()
+        self.myLongTask.taskFinished.connect(self.onFinished)
+
+    def onStart(self):
+        self.progressBar.setRange(0,0)
+        self.myLongTask.start()
+
+    def onFinished(self):
+        # Stop the pulsation
+        self.progressBar.setRange(0,1)
+        self.close()
+        print(1)
+        window = Window()
+        print(2)
+        window.show()
+        print(3)
+        self.show()
+
+class TaskThread(QThread):
+    taskFinished = pyqtSignal()
+    def run(self):
+        time.sleep(3)
+        self.taskFinished.emit()
 
 def check_word(trie, word):
     suggest_list = []
     if check_dictionary(trie, word) == False:
         for i in range(3):
-            if len(suggest_list) > 5:
+            if len(suggest_list) >= 5:
                 break
             edited_word_list = edit_word_once(word)
             for edited_word in edited_word_list:
-                if len(suggest_list) > 5:
+                if edited_word in suggest_list:
+                    continue
+                if len(suggest_list) >= 5:
                     break
                 if check_dictionary(trie, edited_word) == True:
                     suggest_list.append(edited_word)
@@ -68,18 +213,54 @@ def load_dictionary_to_trie(words, trie):
     for word in words:
         trie.insert(word.strip())
 
+def check_text(text):
+    global trie_basic
+    global trie_235k
+    suggest_list_of_all_words = []
+    for i in range(len(text)):
+        suggest_list_of_all_words.append([])
+        if text[i] in string.punctuation:
+            continue
+        print('Finding suggestions with respesct to ' + text[i])
+        suggest_list_of_all_words[i] = check_word(trie_basic, text[i])
+    print(suggest_list_of_all_words)
+    return suggest_list_of_all_words
+
+
 if __name__ == '__main__':
-    trie = trie.Trie()
-    words = load_dictionary_from_txt('data/google-10000-english-usa.txt')
-    load_dictionary_to_trie(words, trie)
-    #print(trie.find('ternary'))
-    #print(trie.find('aa'))
-    #edit_word_once('test')
-    #print(check_word(trie, 'tesa'))
-    text = input('input text:')
-    #tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-    tokenizer = TweetTokenizer()
-    s = tokenizer.tokenize(text)
-    #print(s)
-    for word in s:
-        print(word + repr(check_word(trie, word)))
+    global trie_basic
+    global trie_235k
+    trie_basic = trie.Trie()
+    trie_235k = trie.Trie()
+    words = load_dictionary_from_txt('data/en-basic.txt')
+    #words = load_dictionary_from_txt('data/google-10000-english-usa.txt')
+    load_dictionary_to_trie(words, trie_basic)
+    #words = load_dictionary_from_txt('data/en.txt')
+    load_dictionary_to_trie(words, trie_235k)
+    ##print(trie.find('ternary'))
+    ##print(trie.find('aa'))
+    ##edit_word_once('test')
+    ##print(check_word(trie, 'tesa'))
+    #text = input('input text:')
+    ##tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+    #tokenizer = TweetTokenizer()
+    #s = tokenizer.tokenize(text)
+    ##print(s)
+    #for word in s:
+    #    print(word + repr(check_word(trie, word)))
+    application = QApplication(sys.argv)
+    #splash_pix = QPixmap('splash_loading.png')
+    #splash = QSplashScreen(splash_pix, Qt.WindowStaysOnTopHint)
+    #splash.setMask(splash_pix.mask())
+    #splash.show()
+    #application.processEvents()
+
+    ## Simulate something that takes time
+    #time.sleep(2)
+    #progress_bar = MyCustomWidget()
+    #progress_bar.resize(850, 480)
+    #progress_bar.show()
+    ex = Window()
+    #ex.show()
+    #splash.finish(ex)
+    sys.exit(application.exec_())
