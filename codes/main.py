@@ -150,20 +150,32 @@ class TaskThread(QThread):
 def check_word(trie, word):
     suggest_list = []
     if check_dictionary(trie, word) == False:
+        edited_word_list = word
         for i in range(3):
-            if len(suggest_list) >= 5:
+            if len(suggest_list) >= 8:
                 break
-            edited_word_list = edit_word_once(word)
+            edited_word_list = edit_word(edited_word_list, i + 1)
             for edited_word in edited_word_list:
                 if edited_word in suggest_list:
                     continue
-                if len(suggest_list) >= 5:
+                if len(suggest_list) >= 8:
                     break
                 if check_dictionary(trie, edited_word) == True:
                     suggest_list.append(edited_word)
         if len(suggest_list) == 0:
             suggest_list.append('No suggestion')
     return suggest_list
+
+def edit_word(word_or_list, edit_distance):
+    if edit_distance <= 1:
+        return edit_word_once(word_or_list)
+    else:
+        edited_list = []
+        for edited_word in word_or_list:
+            if len(edited_list) > 100000:
+                break
+            edited_list += edit_word_once(edited_word)
+        return edited_list
 
 def edit_word_once(word):
     splits = []
@@ -187,7 +199,7 @@ def edit_word_once(word):
             traspose_list.append(a + second_half)
         for c in string.ascii_lowercase:
             insert_list.append(a + c + b)
-    result = delete_list + traspose_list + replace_list + insert_list
+    result = traspose_list + delete_list + replace_list + insert_list
 #    print(splits)
 #    print(delete_list)
 #    print(traspose_list)
@@ -222,7 +234,11 @@ def check_text(text):
         if text[i] in string.punctuation:
             continue
         print('Finding suggestions with respesct to ' + text[i])
-        suggest_list_of_all_words[i] = check_word(trie_basic, text[i])
+        if text[i] == 'i':
+            suggest_list_of_all_words[i].append('I')
+            continue
+        #suggest_list_of_all_words[i] = check_word(trie_basic, text[i])
+        suggest_list_of_all_words[i] = check_word(trie_235k, text[i])
     print(suggest_list_of_all_words)
     return suggest_list_of_all_words
 
@@ -235,7 +251,7 @@ if __name__ == '__main__':
     words = load_dictionary_from_txt('data/en-basic.txt')
     #words = load_dictionary_from_txt('data/google-10000-english-usa.txt')
     load_dictionary_to_trie(words, trie_basic)
-    #words = load_dictionary_from_txt('data/en.txt')
+    words = load_dictionary_from_txt('data/en.txt')
     load_dictionary_to_trie(words, trie_235k)
     ##print(trie.find('ternary'))
     ##print(trie.find('aa'))

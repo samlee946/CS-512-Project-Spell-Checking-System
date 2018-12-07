@@ -1,26 +1,195 @@
-\textnormal{
-Specify the language and programming environemnt you used for your implementation.
+
+We are using Python 3.7 as our programming languange for this project. 
+The programming environment is as follows:
+\paragraph{Operating System}{Ubuntu 18.04.1 LTS 64-bit}
+\paragraph{Processor}{Intel$ ^\text{\textregistered} $ Core$ ^{\text{\texttrademark}} $ i7-8700K CPU}
+\paragraph{Memory}{16 GB DDR4-3200 Memory}
+\paragraph{Graphics Card}{GTX 1070ti} \\
 %Building the corresponding relational tables, according to the proposed ER model described in the previous phase %enforcing the different integrity constraints.  
 The deliverables for this stage include the following items:
 \begin{itemize} 
 \item{}
-Sample small data snippet. 
+Sample small data snippet: \\
 %The SQL tables that represent the ER project model, along with at least 3-5 rows of concrete data per table.
+``Aoccdrnig to a rscheearch at Cmabrigde Uinervtisy, it deosn't mttaer in waht oredr the ltteers in a wrod are, the olny iprmoetnt tihng is taht the frist and lsat ltteer be at the rghit pclae. The rset can be a toatl mses and you can sitll raed it wouthit porbelm. Tihs is bcuseae the huamn mnid deos not raed ervey lteter by istlef, but the wrod as a wlohe.''
 \item{}
-Sample small output
+Sample small output: \\
 %The normalization steps for each table, along with explanations/justifications of each normalization step.
+\textbf{If we choose the first suggestion in the list:} ``Aoccdrnig to a rscheearch at Cmabrigde Uinervtisy, it doesnt matter in what order the ltteers in a word are, the only iprmoetnt thing is that the frist and slat letter be at the grit place. The rest can be a total mess and you can still ared it outhit problem. his is abusee the human mind does not ared reve letter by istle, but the word as a wolve.'' \\
+\textbf{If we choose the best suggestion in the list:} ``Aoccdrnig to a rscheearch at Cmabrigde Uinervtisy, it doesnt matter in what order the ltteers in a word are, the only iprmoetnt thing is that the frist and last letter be at the right place. The rest can be a total mess and you can still read it outhit problem. this is abusee the human mind does not read every letter by itself, but the word as a wolve.''
 \item{}
-Working code
+
+Working code: \\
+\textbf{The code of Trie (Ternary Search tree)} \\
+\begin{minted}{python}
+class Trie:
+  root = None
+  def __init__(self):
+    self.root = None
+  def insert(self, word):
+    self.root = insert(self.root, word)
+  def find(self, word):
+    return find(self.root, word)
+
+class Node:
+  leftChild = None
+  rightChild = None
+  centerChild = None
+  indicator = False
+  character = None
+  def __init__(self, character):
+    self.character = character
+
+def insert(node, word):
+  if len(word) == 0:
+    return node
+  if node is None:
+    node = Node(word[0])
+  if word[0] < node.character:
+    node.leftChild = insert(node.le
+    ftChild, word)
+  elif word[0] > node.character:
+    node.rightChild = insert(node.r
+    ightChild, word)
+  else:
+    if len(word[1:]) == 0:
+      node.indicator = True
+    else:
+      node.centerChild = insert(n
+      ode.centerChild, word[1:])
+  return node
+
+def find(node, word):
+  if node is None or len(word) == 0:
+    return False
+  if word[0] < node.character:
+    return find(node.leftChild, wor
+    d)
+  elif word[0] > node.character:
+    return find(node.rightChild, wo
+    rd)
+  else:
+    if len(word) == 1 and node.indi
+    cator == True:
+      return True
+    return find(node.centerChild, w
+    ord[1:])
+\end{minted}
+\textbf{The code of the checker:} \\
+\begin{minted}{python}
+def check_word(trie, word):
+  suggest_list = []
+  if check_dictionary(trie, word) == Fals
+  e:
+    edited_word_list = word
+    for i in range(3):
+      if len(suggest_list) >= 8:
+        break
+      edited_word_list = edit_word(ed
+      ited_word_list, i + 1)
+      for edited_word in edited_word_
+      list:
+        if edited_word in suggest_l
+        ist:
+          continue
+        if len(suggest_list) >= 8:
+          break
+        if check_dictionary(trie, e
+        dited_word) == True:
+          suggest_list.append(edi
+          ted_word)
+    if len(suggest_list) == 0:
+      suggest_list.append('No suggest
+      ion')
+  return suggest_list
+
+def edit_word(word_or_list, edit_distance):
+  if edit_distance <= 1:
+    return edit_word_once(word_or_list)
+  else:
+    edited_list = []
+    for edited_word in word_or_list:
+      if len(edited_list) > 100000:
+        break
+      edited_list += edit_word_once(ed
+      ited_word)
+    return edited_list
+
+def edit_word_once(word):
+  splits = []
+  delete_list = []
+  traspose_list = []
+  replace_list = []
+  insert_list = []
+  result = []
+  for i in range(len(word) + 1):
+    splits.append((word[0:i], word[i:]))
+  for (a, b) in splits:
+    if len(b) >= 1:
+      delete_list.append(a + b[1:])
+      for c in string.ascii_lowercase:
+        replaced_word = a + c + b[1:]
+        if word == replaced_word:
+          continue
+        replace_list.append(replaced_
+        word)
+    if len(b) >= 2:
+      second_half = b[1] + b[0] + b[2:]
+      traspose_list.append(a + second_h
+      alf)
+    for c in string.ascii_lowercase:
+      insert_list.append(a + c + b)
+  result = traspose_list + delete_list +
+   replace_list + insert_list
+  return result
+
+def check_dictionary(trie, word):
+  return trie.find(word)
+
+def load_dictionary_from_json(filepath):
+  with open(filepath) as dictionary_file:
+    words = set(dictionary_file.read().spl
+    it())
+  return words
+
+def load_dictionary_from_txt(filepath):
+  with open(filepath) as dictionary_file:
+    words = dictionary_file.readlines()
+  return words
+
+def load_dictionary_to_trie(words, trie):
+  for word in words:
+    trie.insert(word.strip())
+
+def check_text(text):
+  global trie_basic
+  global trie_235k
+  suggest_list_of_all_words = []
+  for i in range(len(text)):
+    suggest_list_of_all_words.append([])
+    if text[i] in string.punctuation:
+      continue
+    print('Finding suggestions with respes
+    ct to ' + text[i])
+    if text[i] == 'i':
+      suggest_list_of_all_words[i].appe
+      nd('I')
+      continue
+    suggest_list_of_all_words[i] = check_w
+    ord(trie_235k, text[i])
+  print(suggest_list_of_all_words)
+  return suggest_list_of_all_words
+\end{minted}
 %The SQL table after the normalization steps (showing all table attributes).
 \item{}
 Demo and sample findings
 %The SQL statements used to create the SQL tables, including the required triggers as well as the integrity constraints. At %least 2 triggers and 2 of each of the following constraint types have to exist in the project tables overall: 
 \begin{itemize} 
 \item{}
-	Data size: In terms of  RAM size;  Disk Resident?; Streaming ?;  
+	Data size: We have around 240,000 English vocabularies storing in a txt file of 2.5 MB. After fully loaded, the program takes around 300 MB of memory.
 \item{}
-	List the most interestng findings in the data if it is a Data Exploration Project. For other project types consult with your project supervisor what the corresponding outcomes shall be. Concentrate on demonstrating the Usefuness and Novelty of your application.
+	The accuracy of this program heavily depends on the vocabulary we have, and it is hard to do a perfect English spell checking system using merely Trie.
 %Whether some users will be denied access and/or updates to some data according to their roles (for example: student1 %can not access other students' ' grades, so a violation error pops up upon that action. Another example: a sales person %can see an item price, but can not change it, since only a manger can, also a violation error pops up upon that update %attempt).
 \end{itemize}
 \end{itemize}
-}
+
