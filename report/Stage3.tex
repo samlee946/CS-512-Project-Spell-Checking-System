@@ -15,7 +15,7 @@ Sample small data snippet: \\
 \item{}
 Sample small output: \\
 %The normalization steps for each table, along with explanations/justifications of each normalization step.
-\textbf{If we choose the first suggestion in the list:} ``Aoccdrnig to a rscheearch at Cmabrigde Uinervtisy, it doesnt matter in what order the ltteers in a word are, the only iprmoetnt thing is that the frist and slat letter be at the grit place. The rest can be a total mess and you can still ared it outhit problem. his is abusee the human mind does not ared reve letter by istle, but the word as a wolve.'' \\
+\textbf{If we use the program's auto correction:} ``Aoccdrnig to a rscheearch at Cmabrigde Uinervtisy, it doesnt matter in what order the ltteers in a word are, the only iprmoetnt thing is that the frist and last letter be at the right place. the set can be a total mess and you can still read it outhit problem. this is abusee the human mind does not read every letter by istle, but the word as a wolve.'' \\
 \textbf{If we choose the best suggestion in the list:} ``Aoccdrnig to a rscheearch at Cmabrigde Uinervtisy, it doesnt matter in what order the ltteers in a word are, the only iprmoetnt thing is that the frist and last letter be at the right place. The rest can be a total mess and you can still read it outhit problem. this is abusee the human mind does not read every letter by itself, but the word as a wolve.''
 \item{}
 
@@ -26,8 +26,9 @@ class Trie:
   root = None
   def __init__(self):
     self.root = None
-  def insert(self, word):
-    self.root = insert(self.root, word)
+  def insert(self, word, rank):
+    self.root = insert(self.root,
+      word, rank)
   def find(self, word):
     return find(self.root, word)
 
@@ -37,70 +38,81 @@ class Node:
   centerChild = None
   indicator = False
   character = None
+  value = 99999
   def __init__(self, character):
     self.character = character
 
-def insert(node, word):
+def insert(node, word, rank):
   if len(word) == 0:
     return node
   if node is None:
     node = Node(word[0])
   if word[0] < node.character:
-    node.leftChild = insert(node.le
-    ftChild, word)
+    node.leftChild = insert(
+      node.leftChild, word, rank)
   elif word[0] > node.character:
-    node.rightChild = insert(node.r
-    ightChild, word)
+    node.rightChild = insert(
+      node.rightChild, word, rank)
   else:
     if len(word[1:]) == 0:
       node.indicator = True
+      node.value = int(rank)
     else:
-      node.centerChild = insert(n
-      ode.centerChild, word[1:])
+      node.centerChild = insert(
+        node.centerChild, 
+        word[1:], rank)
   return node
 
 def find(node, word):
   if node is None or len(word) == 0:
-    return False
+    return (False, 99999)
   if word[0] < node.character:
-    return find(node.leftChild, wor
-    d)
+    return find(node.leftChild, word)
   elif word[0] > node.character:
-    return find(node.rightChild, wo
-    rd)
+    return find(node.rightChild, word)
   else:
-    if len(word) == 1 and node.indi
-    cator == True:
-      return True
-    return find(node.centerChild, w
-    ord[1:])
+    if len(word) == 1 and 
+       node.indicator == True:
+      return (True, node.value)
+    return find(node.centerChild, 
+          word[1:])
 \end{minted}
 \textbf{The code of the checker:} \\
 \begin{minted}{python}
 def check_word(trie, word):
   suggest_list = []
-  if check_dictionary(trie, word) == Fals
-  e:
+  suggest_list_without_rank = []
+  print(check_dictionary(trie, word))
+  check_result, word_rank = 
+    check_dictionary(trie, word)
+  if check_result == False:
     edited_word_list = word
     for i in range(3):
       if len(suggest_list) >= 8:
         break
-      edited_word_list = edit_word(ed
-      ited_word_list, i + 1)
-      for edited_word in edited_word_
-      list:
-        if edited_word in suggest_l
-        ist:
+      edited_word_list = edit_word(
+        edited_word_list, i + 1)
+      for edited_word in 
+        edited_word_list:
+        if edited_word in
+          suggest_list_without_rank:
           continue
         if len(suggest_list) >= 8:
           break
-        if check_dictionary(trie, e
-        dited_word) == True:
-          suggest_list.append(edi
-          ted_word)
+        check_result, word_rank = 
+          check_dictionary(trie,
+            edited_word)
+        if check_result == True:
+          suggest_list.append(
+            (edited_word, i,
+              word_rank))
+          suggest_list_without
+_rank.append(edited_word)
+    suggest_list = sorted(suggest_list,
+      key=itemgetter(1, 2))
     if len(suggest_list) == 0:
-      suggest_list.append('No suggest
-      ion')
+      suggest_list.append(
+        ('No suggestion', 9, 99999))
   return suggest_list
 
 def edit_word(word_or_list, edit_distance):
@@ -111,8 +123,8 @@ def edit_word(word_or_list, edit_distance):
     for edited_word in word_or_list:
       if len(edited_list) > 100000:
         break
-      edited_list += edit_word_once(ed
-      ited_word)
+      edited_list += edit_word_once(
+        edited_word)
     return edited_list
 
 def edit_word_once(word):
@@ -131,16 +143,16 @@ def edit_word_once(word):
         replaced_word = a + c + b[1:]
         if word == replaced_word:
           continue
-        replace_list.append(replaced_
-        word)
+        replace_list.append(
+          replaced_word)
     if len(b) >= 2:
       second_half = b[1] + b[0] + b[2:]
-      traspose_list.append(a + second_h
-      alf)
+      traspose_list.append(a + 
+        second_half)
     for c in string.ascii_lowercase:
       insert_list.append(a + c + b)
   result = traspose_list + delete_list +
-   replace_list + insert_list
+    replace_list + insert_list
   return result
 
 def check_dictionary(trie, word):
@@ -148,18 +160,21 @@ def check_dictionary(trie, word):
 
 def load_dictionary_from_json(filepath):
   with open(filepath) as dictionary_file:
-    words = set(dictionary_file.read().spl
-    it())
+    words = set(dictionary_file.read()
+.split())
   return words
 
 def load_dictionary_from_txt(filepath):
   with open(filepath) as dictionary_file:
     words = dictionary_file.readlines()
+  words = [word.split() 
+        for word in words]
   return words
 
 def load_dictionary_to_trie(words, trie):
-  for word in words:
-    trie.insert(word.strip())
+  for word, rank in words:
+    trie.insert(word.strip(), 
+      rank.strip())
 
 def check_text(text):
   global trie_basic
@@ -169,14 +184,14 @@ def check_text(text):
     suggest_list_of_all_words.append([])
     if text[i] in string.punctuation:
       continue
-    print('Finding suggestions with respes
-    ct to ' + text[i])
+    print('Finding suggestions ' +
+      'with respesct to ' + text[i])
     if text[i] == 'i':
-      suggest_list_of_all_words[i].appe
-      nd('I')
+      suggest_list_of_all_words[i]
+.append('I')
       continue
-    suggest_list_of_all_words[i] = check_w
-    ord(trie_235k, text[i])
+    suggest_list_of_all_words[i] = 
+      check_word(trie_235k, text[i])
   print(suggest_list_of_all_words)
   return suggest_list_of_all_words
 \end{minted}

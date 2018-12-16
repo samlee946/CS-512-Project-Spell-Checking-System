@@ -85,7 +85,15 @@ class Window(QWidget):
         tokenizer = TweetTokenizer()
         self.text = tokenizer.tokenize(text)
         print(self.text)
-        if len(self.text) != 0:
+        if len(self.text) == 0:
+            print('No text!')
+            self.no_text_event()
+            return
+        elif len(self.text) > 50000:
+            print('Text too long!')
+            self.text_too_long_event()
+            return
+        else:
             self.suggest_list_of_all_words = check_text(self.text)
             for i in range(len(self.text)):
                 if len(self.suggest_list_of_all_words[i]) == 0:
@@ -115,6 +123,27 @@ class Window(QWidget):
         self.textbox.setPlainText('')
         self.words_list.clear()
         self.suggestions_list.clear()
+
+    def text_too_long_event(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText('Text is too long!')
+        msg.setWindowTitle('Error')
+        msg.exec_()
+
+    def no_text_event(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText('Please input text!')
+        msg.setWindowTitle('Error')
+        msg.exec_()
+
+    def input_english_event(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText('Please input English!')
+        msg.setWindowTitle('Error')
+        msg.exec_()
 
 class MyCustomWidget(QWidget):
 
