@@ -5,6 +5,7 @@ import time
 import trie
 import string
 import nltk
+from operator import itemgetter
 from nltk.tokenize import TweetTokenizer
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenu, QVBoxLayout,
     QSizePolicy, QMessageBox, QPushButton, QWidget, QSlider, QLabel,
@@ -32,7 +33,7 @@ class Window(QWidget):
 
         self.textbox = QPlainTextEdit(self)
         self.textbox.resize(640, 480)
-        grid.addWidget(self.textbox, 0, 0, 5, 3)
+        grid.addWidget(self.textbox, 0, 0, 6, 3)
 
         self.button_check = QPushButton('Check!', self)
         self.button_check.clicked.connect(self.button_check_event)
@@ -46,21 +47,25 @@ class Window(QWidget):
         self.button_clear.setFixedSize(100, 40)
         grid.addWidget(self.button_clear, 0, 5)
 
+        self.checkbox = QCheckBox('Auto correction', self)
+        self.checkbox.setChecked(True)
+        grid.addWidget(self.checkbox, 1, 4, 1, 2)
+
         self.words_label = QLabel('Words that have suggestion(s):')
-        grid.addWidget(self.words_label, 1, 4, 1, 2)
+        grid.addWidget(self.words_label, 2, 4, 1, 2)
 
         self.words_list = QListWidget()
         self.words_list.setFixedSize(210, 240)
         self.words_list.itemActivated.connect(self.word_list_item_event)
-        grid.addWidget(self.words_list, 2, 4, 1, 2)
+        grid.addWidget(self.words_list, 3, 4, 1, 2)
 
         self.suggestions_label = QLabel('Suggestion(s):')
-        grid.addWidget(self.suggestions_label, 3, 4, 1, 2)
+        grid.addWidget(self.suggestions_label, 4, 4, 1, 2)
 
         self.suggestions_list = QListWidget()
         self.suggestions_list.setFixedSize(210, 180)
         self.suggestions_list.itemActivated.connect(self.correction_event)
-        grid.addWidget(self.suggestions_list, 4, 4, 1, 2)
+        grid.addWidget(self.suggestions_list, 5, 4, 1, 2)
 
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
@@ -88,14 +93,17 @@ class Window(QWidget):
                 print('Adding a word:' + self.text[i])
                 item = QListWidgetItem(self.text[i], parent = None, type = i)
                 self.words_list.addItem(item)
+                if self.checkbox.isChecked() == True and self.suggest_list_of_all_words[i][0][0] != 'No suggestion':
+                    self.text[i] = self.suggest_list_of_all_words[i][0][0]
                 #self.words_list.addItem(self.text[i])
+        if self.checkbox.isChecked() == True:
+            self.textbox.setPlainText(' '.join(self.text))
 
     def word_list_item_event(self, item):
         self.suggestions_list.clear()
         print('Selected ' + item.text() + ', id:' + repr(item.type()))
         for suggestion in self.suggest_list_of_all_words[item.type()]:
-            item = QListWidgetItem(suggestion, parent = None, type =
-                                   item.type())
+            item = QListWidgetItem(suggestion[0], parent = None, type = item.type())
             self.suggestions_list.addItem(item)
 
     def correction_event(self, item):
@@ -149,21 +157,27 @@ class TaskThread(QThread):
 
 def check_word(trie, word):
     suggest_list = []
-    if check_dictionary(trie, word) == False:
+    suggest_list_without_rank = []
+    print(check_dictionary(trie, word))
+    check_result, word_rank = check_dictionary(trie, word)
+    if check_result == False:
         edited_word_list = word
         for i in range(3):
             if len(suggest_list) >= 8:
                 break
             edited_word_list = edit_word(edited_word_list, i + 1)
             for edited_word in edited_word_list:
-                if edited_word in suggest_list:
+                if edited_word in suggest_list_without_rank:
                     continue
                 if len(suggest_list) >= 8:
                     break
-                if check_dictionary(trie, edited_word) == True:
-                    suggest_list.append(edited_word)
+                check_result, word_rank = check_dictionary(trie, edited_word)
+                if check_result == True:
+                    suggest_list.append((edited_word, i, word_rank))
+                    suggest_list_without_rank.append(edited_word)
+        suggest_list = sorted(suggest_list, key=itemgetter(1, 2))
         if len(suggest_list) == 0:
-            suggest_list.append('No suggestion')
+            suggest_list.append(('No suggestion', 9, 99999))
     return suggest_list
 
 def edit_word(word_or_list, edit_distance):
@@ -219,11 +233,12 @@ def load_dictionary_from_json(filepath):
 def load_dictionary_from_txt(filepath):
     with open(filepath) as dictionary_file:
         words = dictionary_file.readlines()
+    words = [word.split() for word in words]
     return words
 
 def load_dictionary_to_trie(words, trie):
-    for word in words:
-        trie.insert(word.strip())
+    for word, rank in words:
+        trie.insert(word.strip(), rank.strip())
 
 def check_text(text):
     global trie_basic
@@ -248,10 +263,10 @@ if __name__ == '__main__':
     global trie_235k
     trie_basic = trie.Trie()
     trie_235k = trie.Trie()
-    words = load_dictionary_from_txt('data/en-basic.txt')
+    words = load_dictionary_from_txt('data/freq.txt')
     #words = load_dictionary_from_txt('data/google-10000-english-usa.txt')
     load_dictionary_to_trie(words, trie_basic)
-    words = load_dictionary_from_txt('data/en.txt')
+    words = load_dictionary_from_txt('data/en1.txt')
     load_dictionary_to_trie(words, trie_235k)
     ##print(trie.find('ternary'))
     ##print(trie.find('aa'))
